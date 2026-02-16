@@ -1,0 +1,27 @@
+# SSL сертификаты и ключи (не коммитить!)
+ssl/*.key
+ssl/*.p12
+ssl/*.csr
+ssl/*.srl
+ssl/ca.key
+
+# Keycloak секреты клиентов
+keycloak-clients-secrets.txt
+*.secrets
+
+# Переменные окружения с секретами
+.env
+.env.local
+.env.*.local
+
+# Логи
+nginx/logs/*
+*.log
+
+# Docker volumes
+*.data
+
+# Временные файлы
+*.tmp
+*.swp
+*~

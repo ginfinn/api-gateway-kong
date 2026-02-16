@@ -1,0 +1,178 @@
+# Kong декларативная конфигурация
+# Конфигурация для множественных клиентов Keycloak для разных бэкендов
+#
+# Архитектура:
+# - Каждый бэкенд сервис имеет свой клиент в Keycloak
+# - Каждый клиент имеет свой client_id и client_secret
+# - Разные роуты могут использовать разные клиенты для изоляции доступа
+#
+# ВАЖНО: Замените значения ниже на реальные из вашего Keycloak:
+# - client_id: имя клиента из Keycloak
+# - client_secret: секрет клиента из Keycloak (Credentials tab)
+# - session_secret: случайная строка минимум 32 символа (уникальный для каждого сервиса)
+
+_format_version: "3.0"
+
+services:
+  # Сервис 1: User Service (пользовательский сервис)
+  - name: user-service
+    url: http://user-backend:8080
+    routes:
+      - name: user-service-route
+        paths:
+          - /api/users
+          - /api/v1/users
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+    plugins:
+      - name: oidc
+        config:
+          issuer: http://keycloak:8080/realms/myrealm
+          client_id: user-service-client
+          client_secret: USER_SERVICE_CLIENT_SECRET_HERE
+          discovery: http://keycloak:8080/realms/myrealm/.well-known/openid-configuration
+          introspection_endpoint: http://keycloak:8080/realms/myrealm/protocol/openid-connect/token/introspect
+          bearer_only: "yes"
+          realm: myrealm
+          logout_path: /logout
+          redirect_after_logout_uri: /
+          session_secret: user-service-session-secret-min-32-chars-change-me
+          ssl_verify: "yes"  # ИСПРАВЛЕНО: Включена проверка SSL для production
+          token_endpoint_auth_method: "client_secret_post"
+          introspection_endpoint_auth_method: "client_secret_post"
+          session_cookie_lifetime: 3600
+          # Опционально: проверка audience для дополнительной безопасности
+          # audience: "user-service"
+
+  # Сервис 2: Order Service (сервис заказов)
+  - name: order-service
+    url: http://order-backend:8080
+    routes:
+      - name: order-service-route
+        paths:
+          - /api/orders
+          - /api/v1/orders
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+    plugins:
+      - name: oidc
+        config:
+          issuer: http://keycloak:8080/realms/myrealm
+          client_id: order-service-client
+          client_secret: ORDER_SERVICE_CLIENT_SECRET_HERE
+          discovery: http://keycloak:8080/realms/myrealm/.well-known/openid-configuration
+          introspection_endpoint: http://keycloak:8080/realms/myrealm/protocol/openid-connect/token/introspect
+          bearer_only: "yes"
+          realm: myrealm
+          logout_path: /logout
+          redirect_after_logout_uri: /
+          session_secret: order-service-session-secret-min-32-chars-change-me
+          ssl_verify: "yes"  # ИСПРАВЛЕНО: Включена проверка SSL для production
+          token_endpoint_auth_method: "client_secret_post"
+          introspection_endpoint_auth_method: "client_secret_post"
+          session_cookie_lifetime: 3600
+          # audience: "order-service"
+
+  # Сервис 3: Payment Service (платежный сервис)
+  - name: payment-service
+    url: http://payment-backend:8080
+    routes:
+      - name: payment-service-route
+        paths:
+          - /api/payments
+          - /api/v1/payments
+        strip_path: false
+        methods:
+          - GET
+          - POST
+    plugins:
+      - name: oidc
+        config:
+          issuer: http://keycloak:8080/realms/myrealm
+          client_id: payment-service-client
+          client_secret: PAYMENT_SERVICE_CLIENT_SECRET_HERE
+          discovery: http://keycloak:8080/realms/myrealm/.well-known/openid-configuration
+          introspection_endpoint: http://keycloak:8080/realms/myrealm/protocol/openid-connect/token/introspect
+          bearer_only: "yes"
+          realm: myrealm
+          logout_path: /logout
+          redirect_after_logout_uri: /
+          session_secret: payment-service-session-secret-min-32-chars-change-me
+          ssl_verify: "yes"  # ИСПРАВЛЕНО: Включена проверка SSL для production
+          token_endpoint_auth_method: "client_secret_post"
+          introspection_endpoint_auth_method: "client_secret_post"
+          session_cookie_lifetime: 3600
+          # audience: "payment-service"
+
+  # Сервис 4: Admin Service (административный сервис)
+  - name: admin-service
+    url: http://admin-backend:8080
+    routes:
+      - name: admin-service-route
+        paths:
+          - /api/admin
+          - /api/v1/admin
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - PATCH
+    plugins:
+      - name: oidc
+        config:
+          issuer: http://keycloak:8080/realms/myrealm
+          client_id: admin-service-client
+          client_secret: ADMIN_SERVICE_CLIENT_SECRET_HERE
+          discovery: http://keycloak:8080/realms/myrealm/.well-known/openid-configuration
+          introspection_endpoint: http://keycloak:8080/realms/myrealm/protocol/openid-connect/token/introspect
+          bearer_only: "yes"
+          realm: myrealm
+          logout_path: /logout
+          redirect_after_logout_uri: /
+          session_secret: admin-service-session-secret-min-32-chars-change-me
+          ssl_verify: "yes"  # ИСПРАВЛЕНО: Включена проверка SSL для production
+          token_endpoint_auth_method: "client_secret_post"
+          introspection_endpoint_auth_method: "client_secret_post"
+          session_cookie_lifetime: 1800  # Более короткая сессия для админки
+          # audience: "admin-service"
+          # Дополнительно: можно добавить проверку ролей через дополнительные плагины
+
+  # Сервис 5: Public API (публичный API без аутентификации или с опциональной)
+  - name: public-service
+    url: http://public-backend:8080
+    routes:
+      - name: public-service-route
+        paths:
+          - /api/public
+          - /api/v1/public
+        strip_path: false
+    # Без OIDC плагина - публичный доступ
+    # Или с опциональной аутентификацией:
+    # plugins:
+    #   - name: oidc
+    #     config:
+    #       issuer: http://keycloak:8080/realms/myrealm
+    #       client_id: public-service-client
+    #       client_secret: PUBLIC_SERVICE_CLIENT_SECRET_HERE
+    #       bearer_only: "no"  # Опциональная аутентификация
+
+  # Keycloak Service (для доступа к Keycloak endpoints)
+  - name: keycloak-service
+    url: http://keycloak:8080
+    routes:
+      - name: keycloak-route
+        paths:
+          - /auth
+          - /realms
+        strip_path: false
+    # Без OIDC плагина - Keycloak сам обрабатывает аутентификацию
